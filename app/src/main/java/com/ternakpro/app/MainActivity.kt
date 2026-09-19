@@ -3,30 +3,28 @@ package com.ternakpro.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
+import com.ternakpro.app.ui.TernakProApp
+import com.ternakpro.app.ui.theme.TernakProTheme
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        setContent {
-            TernakProRoot()
-        }
-    }
-}
+        enableEdgeToEdge()
 
-@Composable
-private fun TernakProRoot() {
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
-    ) {
-        CircularProgressIndicator()
+        setContent {
+            TernakProTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    TernakProApp()
+                }
+            }
+        }
     }
 }
