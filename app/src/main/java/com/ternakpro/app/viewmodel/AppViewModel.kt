@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.ternakpro.app.database.*
 import com.ternakpro.app.repository.TernakRepository
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
 
 data class DashboardState(
     val ayamHidup: Int = 0,
@@ -72,66 +71,78 @@ class AppViewModel(
 
     val dashboard: StateFlow<DashboardState> = combine(
         produksi,
-        transaksiPakan,
         penjualan,
         piutang,
         biaya,
         kerugian
-    ) { produksiList, pakanList, penjualanList, piutangList, biayaList, kerugianList ->
+    ) { produksiList, penjualanList, piutangList, biayaList, kerugianList ->
 
-        val hariIni = java.text.SimpleDateFormat(
-            "yyyy-MM-dd",
-            java.util.Locale.getDefault()
-        ).format(java.util.Date())
+        val tanggalHariIni =
+            java.text.SimpleDateFormat(
+                "yyyy-MM-dd",
+                java.util.Locale.getDefault()
+            ).format(java.util.Date())
 
-        val bulanIni = hariIni.substring(0, 7)
+        val bulanIni = tanggalHariIni.substring(0, 7)
 
-        val produksiHariIni = produksiList.filter {
-            it.tanggal == hariIni
-        }
+        val produksiHariIni =
+            produksiList.filter {
+                it.tanggal == tanggalHariIni
+            }
 
-        val produksiBulanIni = produksiList.filter {
-            it.tanggal.startsWith(bulanIni)
-        }
+        val produksiBulanIni =
+            produksiList.filter {
+                it.tanggal.startsWith(bulanIni)
+            }
 
         DashboardState(
             ayamHidup = produksiHariIni.sumOf {
                 it.ayamHidup
             },
+
             ayamMati = produksiHariIni.sumOf {
                 it.ayamMati
             },
-            produksiTelurHariIni = produksiHariIni.sumOf {
-                it.totalTelur
-            },
-            produksiTelurBulanIni = produksiBulanIni.sumOf {
-                it.totalTelur
-            },
-            pakanTerpakai = pakanList
-                .filter { it.jenisTransaksi() }
-                .sumOf { 0.0 },
 
-            totalPenjualan = penjualanList.sumOf {
-                it.total
-            },
+            produksiTelurHariIni =
+                produksiHariIni.sumOf {
+                    it.totalTelur
+                },
 
-            totalPiutang = piutangList.sumOf {
-                it.sisaPiutang
-            },
+            produksiTelurBulanIni =
+                produksiBulanIni.sumOf {
+                    it.totalTelur
+                },
 
-            totalBiaya = biayaList.sumOf {
-                it.nominal
-            },
+            totalPenjualan =
+                penjualanList.sumOf {
+                    it.total.toDouble()
+                },
 
-            totalKerugian = kerugianList.sumOf {
-                it.nilaiKerugian
-            }
+            totalPiutang =
+                piutangList.sumOf {
+                    it.sisaPiutang.toDouble()
+                },
+
+            totalBiaya =
+                biayaList.sumOf {
+                    it.nominal.toDouble()
+                },
+
+            totalKerugian =
+                kerugianList.sumOf {
+                    it.nilaiKerugian.toDouble()
+                }
         )
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5000),
         DashboardState()
     )
+
+    // =========================
+    // KANDANG
+    // =========================
 
     fun tambahKandang(item: Kandang) {
         viewModelScope.launch {
@@ -145,6 +156,10 @@ class AppViewModel(
         }
     }
 
+    // =========================
+    // BATCH
+    // =========================
+
     fun tambahBatch(item: BatchTernak) {
         viewModelScope.launch {
             repository.addBatchTernak(item)
@@ -157,6 +172,10 @@ class AppViewModel(
         }
     }
 
+    // =========================
+    // PRODUKSI
+    // =========================
+
     fun tambahProduksi(item: ProduksiHarian) {
         viewModelScope.launch {
             repository.addProduksi(item)
@@ -168,6 +187,10 @@ class AppViewModel(
             repository.deleteProduksi(item)
         }
     }
+
+    // =========================
+    // PAKAN
+    // =========================
 
     fun tambahPakan(item: Pakan) {
         viewModelScope.launch {
@@ -193,6 +216,10 @@ class AppViewModel(
         }
     }
 
+    // =========================
+    // OBAT / VAKSIN
+    // =========================
+
     fun tambahObat(item: ObatVaksin) {
         viewModelScope.launch {
             repository.addObatVaksin(item)
@@ -217,6 +244,10 @@ class AppViewModel(
         }
     }
 
+    // =========================
+    // PENJUALAN
+    // =========================
+
     fun tambahPenjualan(item: Penjualan) {
         viewModelScope.launch {
             repository.addPenjualan(item)
@@ -228,6 +259,10 @@ class AppViewModel(
             repository.deletePenjualan(item)
         }
     }
+
+    // =========================
+    // PIUTANG
+    // =========================
 
     fun tambahPiutang(item: Piutang) {
         viewModelScope.launch {
@@ -252,12 +287,16 @@ class AppViewModel(
                 PembayaranPiutang(
                     piutangId = piutangId,
                     tanggal = tanggal,
-                    nominal = nominal,
+                    nominal = nominal.toLong(),
                     catatan = catatan
                 )
             )
         }
     }
+
+    // =========================
+    // BIAYA
+    // =========================
 
     fun tambahBiaya(item: BiayaOperasional) {
         viewModelScope.launch {
@@ -271,6 +310,10 @@ class AppViewModel(
         }
     }
 
+    // =========================
+    // KERUGIAN
+    // =========================
+
     fun tambahKerugian(item: Kerugian) {
         viewModelScope.launch {
             repository.addKerugian(item)
@@ -283,11 +326,19 @@ class AppViewModel(
         }
     }
 
+    // =========================
+    // PENGATURAN
+    // =========================
+
     fun simpanPengaturan(item: PengaturanAplikasi) {
         viewModelScope.launch {
             repository.savePengaturan(item)
         }
     }
+
+    // =========================
+    // DATA
+    // =========================
 
     fun hapusSemuaData() {
         viewModelScope.launch {
@@ -301,15 +352,13 @@ class AppViewModel(
         }
     }
 
-    private fun Pakan.jenisTransaksi(): Boolean {
-        return true
-    }
-
     companion object {
+
         fun factory(
             repository: TernakRepository
         ): ViewModelProvider.Factory =
             object : ViewModelProvider.Factory {
+
                 @Suppress("UNCHECKED_CAST")
                 override fun <T : ViewModel> create(
                     modelClass: Class<T>
