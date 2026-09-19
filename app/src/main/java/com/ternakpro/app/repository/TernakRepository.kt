@@ -1,20 +1,7 @@
 package com.ternakpro.app.repository
 
 import androidx.room.withTransaction
-import com.ternakpro.app.database.AppDatabase
-import com.ternakpro.app.database.BiayaOperasional
-import com.ternakpro.app.database.BatchTernak
-import com.ternakpro.app.database.Kandang
-import com.ternakpro.app.database.Kerugian
-import com.ternakpro.app.database.ObatVaksin
-import com.ternakpro.app.database.Pakan
-import com.ternakpro.app.database.PembayaranPiutang
-import com.ternakpro.app.database.Penjualan
-import com.ternakpro.app.database.PengaturanAplikasi
-import com.ternakpro.app.database.Piutang
-import com.ternakpro.app.database.ProduksiHarian
-import com.ternakpro.app.database.TransaksiObat
-import com.ternakpro.app.database.TransaksiPakan
+import com.ternakpro.app.database.*
 import kotlinx.coroutines.flow.Flow
 
 class TernakRepository(
@@ -25,10 +12,10 @@ class TernakRepository(
     // KANDANG
     // =========================
 
-    fun observeKandang(): Flow<List<Kandang>> =
-        db.kandangDao().observeAll()
+    val kandang: Flow<List<Kandang>>
+        get() = db.kandangDao().observeAll()
 
-    suspend fun getKandang(): List<Kandang> =
+    suspend fun getAllKandang(): List<Kandang> =
         db.kandangDao().getAll()
 
     suspend fun addKandang(item: Kandang): Long =
@@ -41,26 +28,26 @@ class TernakRepository(
     // BATCH TERNAK
     // =========================
 
-    fun observeBatch(): Flow<List<BatchTernak>> =
-        db.batchTernakDao().observeAll()
+    val batchTernak: Flow<List<BatchTernak>>
+        get() = db.batchTernakDao().observeAll()
 
-    suspend fun getBatch(): List<BatchTernak> =
+    suspend fun getAllBatchTernak(): List<BatchTernak> =
         db.batchTernakDao().getAll()
 
-    suspend fun addBatch(item: BatchTernak): Long =
+    suspend fun addBatchTernak(item: BatchTernak): Long =
         db.batchTernakDao().insert(item)
 
-    suspend fun deleteBatch(item: BatchTernak) =
+    suspend fun deleteBatchTernak(item: BatchTernak) =
         db.batchTernakDao().delete(item)
 
     // =========================
     // PRODUKSI
     // =========================
 
-    fun observeProduksi(): Flow<List<ProduksiHarian>> =
-        db.produksiHarianDao().observeAll()
+    val produksi: Flow<List<ProduksiHarian>>
+        get() = db.produksiHarianDao().observeAll()
 
-    suspend fun getProduksi(): List<ProduksiHarian> =
+    suspend fun getAllProduksi(): List<ProduksiHarian> =
         db.produksiHarianDao().getAll()
 
     suspend fun addProduksi(item: ProduksiHarian): Long =
@@ -69,26 +56,14 @@ class TernakRepository(
     suspend fun deleteProduksi(item: ProduksiHarian) =
         db.produksiHarianDao().delete(item)
 
-    suspend fun totalTelurHariIni(tanggal: String): Int =
-        db.produksiHarianDao().totalTelurTanggal(tanggal)
-
-    suspend fun totalTelurBulan(bulan: String): Int =
-        db.produksiHarianDao().totalTelurBulan(bulan)
-
-    suspend fun totalPakanBulan(bulan: String): Double =
-        db.produksiHarianDao().totalPakanBulan(bulan)
-
-    suspend fun totalBeratTelurBulan(bulan: String): Double =
-        db.produksiHarianDao().totalBeratTelurBulan(bulan)
-
     // =========================
     // PAKAN
     // =========================
 
-    fun observePakan(): Flow<List<Pakan>> =
-        db.pakanDao().observeAll()
+    val pakan: Flow<List<Pakan>>
+        get() = db.pakanDao().observeAll()
 
-    suspend fun getPakan(): List<Pakan> =
+    suspend fun getAllPakan(): List<Pakan> =
         db.pakanDao().getAll()
 
     suspend fun addPakan(item: Pakan): Long =
@@ -97,10 +72,10 @@ class TernakRepository(
     suspend fun deletePakan(item: Pakan) =
         db.pakanDao().delete(item)
 
-    fun observeTransaksiPakan(): Flow<List<TransaksiPakan>> =
-        db.transaksiPakanDao().observeAll()
+    val transaksiPakan: Flow<List<TransaksiPakan>>
+        get() = db.transaksiPakanDao().observeAll()
 
-    suspend fun getTransaksiPakan(): List<TransaksiPakan> =
+    suspend fun getAllTransaksiPakan(): List<TransaksiPakan> =
         db.transaksiPakanDao().getAll()
 
     suspend fun addTransaksiPakan(
@@ -113,21 +88,26 @@ class TernakRepository(
                 ?: error("Pakan tidak ditemukan")
 
             val stokBaru = when (item.jenisTransaksi.uppercase()) {
-                "MASUK" -> pakan.stokSaatIni + item.jumlahKg
+
+                "MASUK" ->
+                    pakan.stokSaatIni + item.jumlahKg
 
                 "PAKAI",
                 "RUSAK",
                 "HILANG" -> {
-                    val result = pakan.stokSaatIni - item.jumlahKg
 
-                    require(result >= 0) {
+                    val hasil =
+                        pakan.stokSaatIni - item.jumlahKg
+
+                    require(hasil >= 0) {
                         "Stok pakan tidak mencukupi"
                     }
 
-                    result
+                    hasil
                 }
 
-                else -> error("Jenis transaksi pakan tidak valid")
+                else ->
+                    error("Jenis transaksi pakan tidak valid")
             }
 
             db.pakanDao().updateStok(
@@ -139,26 +119,29 @@ class TernakRepository(
         }
     }
 
+    suspend fun deleteTransaksiPakan(item: TransaksiPakan) =
+        db.transaksiPakanDao().delete(item)
+
     // =========================
     // OBAT / VAKSIN
     // =========================
 
-    fun observeObat(): Flow<List<ObatVaksin>> =
-        db.obatVaksinDao().observeAll()
+    val obatVaksin: Flow<List<ObatVaksin>>
+        get() = db.obatVaksinDao().observeAll()
 
-    suspend fun getObat(): List<ObatVaksin> =
+    suspend fun getAllObatVaksin(): List<ObatVaksin> =
         db.obatVaksinDao().getAll()
 
-    suspend fun addObat(item: ObatVaksin): Long =
+    suspend fun addObatVaksin(item: ObatVaksin): Long =
         db.obatVaksinDao().insert(item)
 
-    suspend fun deleteObat(item: ObatVaksin) =
+    suspend fun deleteObatVaksin(item: ObatVaksin) =
         db.obatVaksinDao().delete(item)
 
-    fun observeTransaksiObat(): Flow<List<TransaksiObat>> =
-        db.transaksiObatDao().observeAll()
+    val transaksiObat: Flow<List<TransaksiObat>>
+        get() = db.transaksiObatDao().observeAll()
 
-    suspend fun getTransaksiObat(): List<TransaksiObat> =
+    suspend fun getAllTransaksiObat(): List<TransaksiObat> =
         db.transaksiObatDao().getAll()
 
     suspend fun addTransaksiObat(
@@ -170,7 +153,8 @@ class TernakRepository(
             val obat = db.obatVaksinDao().getById(item.obatId)
                 ?: error("Obat/vaksin tidak ditemukan")
 
-            val stokBaru = obat.stok - item.jumlah
+            val stokBaru =
+                obat.stok - item.jumlah
 
             require(stokBaru >= 0) {
                 "Stok obat/vaksin tidak mencukupi"
@@ -185,18 +169,18 @@ class TernakRepository(
         }
     }
 
+    suspend fun deleteTransaksiObat(item: TransaksiObat) =
+        db.transaksiObatDao().delete(item)
+
     // =========================
     // PENJUALAN
     // =========================
 
-    fun observePenjualan(): Flow<List<Penjualan>> =
-        db.penjualanDao().observeAll()
+    val penjualan: Flow<List<Penjualan>>
+        get() = db.penjualanDao().observeAll()
 
-    suspend fun getPenjualan(): List<Penjualan> =
+    suspend fun getAllPenjualan(): List<Penjualan> =
         db.penjualanDao().getAll()
-
-    fun observeTotalPenjualan(): Flow<Long> =
-        db.penjualanDao().observeTotalPenjualan()
 
     suspend fun addPenjualan(item: Penjualan): Long =
         db.penjualanDao().insert(item)
@@ -208,20 +192,23 @@ class TernakRepository(
     // PIUTANG
     // =========================
 
-    fun observePiutang(): Flow<List<Piutang>> =
-        db.piutangDao().observeAll()
+    val piutang: Flow<List<Piutang>>
+        get() = db.piutangDao().observeAll()
 
-    suspend fun getPiutang(): List<Piutang> =
+    suspend fun getAllPiutang(): List<Piutang> =
         db.piutangDao().getAll()
-
-    fun observeTotalPiutang(): Flow<Long> =
-        db.piutangDao().observeTotalPiutang()
 
     suspend fun addPiutang(item: Piutang): Long =
         db.piutangDao().insert(item)
 
     suspend fun deletePiutang(item: Piutang) =
         db.piutangDao().delete(item)
+
+    val pembayaranPiutang: Flow<List<PembayaranPiutang>>
+        get() = db.pembayaranPiutangDao().observeAll()
+
+    suspend fun getAllPembayaranPiutang(): List<PembayaranPiutang> =
+        db.pembayaranPiutangDao().getAll()
 
     suspend fun addPembayaranPiutang(
         pembayaran: PembayaranPiutang
@@ -251,7 +238,8 @@ class TernakRepository(
                     "SEBAGIAN"
                 }
 
-            db.pembayaranPiutangDao().insert(pembayaran)
+            db.pembayaranPiutangDao()
+                .insert(pembayaran)
 
             db.piutangDao().updatePembayaran(
                 id = piutang.id,
@@ -262,17 +250,14 @@ class TernakRepository(
     }
 
     // =========================
-    // BIAYA OPERASIONAL
+    // BIAYA
     // =========================
 
-    fun observeBiaya(): Flow<List<BiayaOperasional>> =
-        db.biayaOperasionalDao().observeAll()
+    val biaya: Flow<List<BiayaOperasional>>
+        get() = db.biayaOperasionalDao().observeAll()
 
-    suspend fun getBiaya(): List<BiayaOperasional> =
+    suspend fun getAllBiaya(): List<BiayaOperasional> =
         db.biayaOperasionalDao().getAll()
-
-    fun observeTotalBiaya(): Flow<Long> =
-        db.biayaOperasionalDao().observeTotalBiaya()
 
     suspend fun addBiaya(item: BiayaOperasional): Long =
         db.biayaOperasionalDao().insert(item)
@@ -284,14 +269,11 @@ class TernakRepository(
     // KERUGIAN
     // =========================
 
-    fun observeKerugian(): Flow<List<Kerugian>> =
-        db.kerugianDao().observeAll()
+    val kerugian: Flow<List<Kerugian>>
+        get() = db.kerugianDao().observeAll()
 
-    suspend fun getKerugian(): List<Kerugian> =
+    suspend fun getAllKerugian(): List<Kerugian> =
         db.kerugianDao().getAll()
-
-    fun observeTotalKerugian(): Flow<Long> =
-        db.kerugianDao().observeTotalKerugian()
 
     suspend fun addKerugian(item: Kerugian): Long =
         db.kerugianDao().insert(item)
@@ -303,8 +285,8 @@ class TernakRepository(
     // PENGATURAN
     // =========================
 
-    fun observePengaturan(): Flow<PengaturanAplikasi?> =
-        db.pengaturanAplikasiDao().observe()
+    val pengaturan: Flow<PengaturanAplikasi?>
+        get() = db.pengaturanAplikasiDao().observe()
 
     suspend fun getPengaturan(): PengaturanAplikasi? =
         db.pengaturanAplikasiDao().get()
@@ -314,10 +296,11 @@ class TernakRepository(
     ) = db.pengaturanAplikasiDao().save(item)
 
     // =========================
-    // HAPUS DATA
+    // HAPUS SEMUA DATA
     // =========================
 
     suspend fun deleteAllData() {
+
         db.withTransaction {
 
             db.pembayaranPiutangDao().deleteAll()
@@ -337,6 +320,119 @@ class TernakRepository(
 
             db.biayaOperasionalDao().deleteAll()
             db.kerugianDao().deleteAll()
+        }
+    }
+
+    // =========================
+    // DATA CONTOH
+    // =========================
+
+    suspend fun seedSampleData() {
+
+        db.withTransaction {
+
+            val kandangId = db.kandangDao().insert(
+                Kandang(
+                    namaKandang = "Kandang A",
+                    lokasi = "Blok Utama",
+                    kapasitas = 1000,
+                    jumlahAyam = 850,
+                    kondisi = "BAIK",
+                    tglDibersihkan = "",
+                    catatan = "Data contoh"
+                )
+            )
+
+            val batchId = db.batchTernakDao().insert(
+                BatchTernak(
+                    namaBatch = "Batch 2026-01",
+                    kandangId = kandangId,
+                    tglMasuk = "2026-01-10",
+                    jumlahAyam = 850,
+                    umurAyam = 18,
+                    breed = "Isa Brown",
+                    asalAyam = "Supplier Lokal",
+                    hargaPerEkor = 75000L,
+                    status = "AKTIF"
+                )
+            )
+
+            db.pakanDao().insert(
+                Pakan(
+                    namaPakan = "Pakan Layer",
+                    jenis = "Layer",
+                    satuan = "kg",
+                    beratPerSak = 50.0,
+                    stokAwal = 500.0,
+                    stokSaatIni = 425.0,
+                    hargaPerSak = 450000L,
+                    supplier = "Supplier Pakan",
+                    catatan = "Data contoh"
+                )
+            )
+
+            db.obatVaksinDao().insert(
+                ObatVaksin(
+                    namaObat = "Vitamin Ayam",
+                    jenis = "Vitamin",
+                    satuan = "botol",
+                    stok = 10,
+                    hargaBeli = 35000L,
+                    supplier = "Supplier Obat",
+                    tglKedaluwarsa = "2027-01-01",
+                    catatan = "Data contoh"
+                )
+            )
+
+            val tanggal =
+                java.text.SimpleDateFormat(
+                    "yyyy-MM-dd",
+                    java.util.Locale.getDefault()
+                ).format(java.util.Date())
+
+            db.produksiHarianDao().insert(
+                ProduksiHarian(
+                    tanggal = tanggal,
+                    batchId = batchId,
+                    kandangId = kandangId,
+                    ayamHidup = 840,
+                    ayamMati = 2,
+                    ayamHilang = 1,
+                    telurBesar = 420,
+                    telurSedang = 250,
+                    telurKecil = 80,
+                    telurTetel = 15,
+                    telurRetak = 5,
+                    telurBusuk = 2,
+                    totalBeratKg = 42.5,
+                    pakanKg = 110.0,
+                    obat = "",
+                    catatan = "Data contoh"
+                )
+            )
+
+            db.biayaOperasionalDao().insert(
+                BiayaOperasional(
+                    tanggal = tanggal,
+                    kategori = "Pakan",
+                    deskripsi = "Pembelian pakan",
+                    nominal = 450000L,
+                    penerima = "Supplier",
+                    catatan = "Data contoh"
+                )
+            )
+
+            db.kerugianDao().insert(
+                Kerugian(
+                    tanggal = tanggal,
+                    jenisKerugian = "Ayam mati",
+                    jumlah = 2.0,
+                    satuan = "ekor",
+                    penyebab = "Data contoh",
+                    nilaiKerugian = 150000L,
+                    catatan = ""
+                )
+            )
         }
     }
 }
